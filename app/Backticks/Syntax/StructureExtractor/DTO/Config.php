@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Backticks\Syntax\Preprocessor\DTO;
+namespace App\Backticks\Syntax\StructureExtractor\DTO;
 
 class Config
 {

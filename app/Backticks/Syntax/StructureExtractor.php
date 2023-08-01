@@ -2,11 +2,17 @@
 
 namespace App\Backticks\Syntax;
 
-use App\Backticks\Syntax\Preprocessor\DTO\Config;
+use App\Backticks\Syntax\Exceptions\ParseErrorException;
+use App\Backticks\Syntax\StructureExtractor\DTO\Config;
 
-class Preprocessor
+class StructureExtractor
 {
-    public const PREG_STRUCTURE = "/`~([^`~]*)~`/s";
+    public const PREG_STRUCTURE = "/`~([^`]*)~`/s";
+
+    public int $level = 0;
+
+    protected array $_replaced = [];
+
     public function __construct(
         protected ?Config $config = null,
     ){
@@ -15,17 +21,12 @@ class Preprocessor
         }
     }
 
-    public function extractStrings(){
-
-    }
-
-
-
     public function extractStructures($string, $level = null): string
     {
-        $iteration = 0;
+        $iteration = $this->level = 0;
         $i = 1;
-        while($matches = $this->matchStructures($string))
+        $matches = $this->matchStructures($string);
+        while($matches !== null && count($matches) && is_array($matches[0]) && count($matches[0]))
         {
             $iteration++;
             $replacements = [];
@@ -35,17 +36,44 @@ class Preprocessor
                 if (array_key_exists($match, $replacements) === false) {
                     $name = $this->makeStructureName($i);
                     $replacements[$match] = $name;
+                    $this->_replaced[$name] = $match;
                     $i++;
                 }
             }
 
             $string = strtr($string, $replacements);
+            $this->level = $iteration;
             if (null !== $level && $iteration >= $level) {
                 break;
             }
+            $matches = $this->matchStructures($string);
+        }
+
+        if (null === $level && (str_contains($string, '`~') || str_contains($string, '~`'))) {
+            throw new ParseErrorException("Could not parse, check opening & closing tags: '$string'");
         }
 
         return $string;
+    }
+
+    public function replaceBack($result)
+    {
+        do {
+            $found = false;
+            foreach($this->_replaced as $name => $value) {
+                if (str_contains($result, $name)) {
+                    $result = str_replace($name, $value, $result);
+                    $found = true;
+                }
+            }
+        } while($found);
+
+        return $result;
+    }
+
+    public function clear()
+    {
+        $this->_replaced = [];
     }
 
     public function makeStructureName($index)
