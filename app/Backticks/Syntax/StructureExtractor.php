@@ -8,6 +8,10 @@ use App\Backticks\Syntax\StructureExtractor\DTO\Config;
 class StructureExtractor
 {
     public const PREG_STRUCTURE = "/`~([^`]*)~`/s";
+    /**
+     * @error can't have ~ inside structures
+    public const PREG_STRUCTURE = "/`~([^`~]*)~`/s";
+     */
 
     public int $level = 0;
 
@@ -70,6 +74,27 @@ class StructureExtractor
 
         return $result;
     }
+
+    /**
+     * @error 1 test fails because it fails to replace back duplicates
+    public function replaceBack($result)
+    {
+    $replaced = $this->_replaced;
+    while (count($replaced) > 0) {
+    $unreplaced = [];
+    foreach($replaced as $name => $value) {
+    if (str_contains($result, $name)) {
+    $result = str_replace($name, $value, $result);
+    } else {
+    $unreplaced[$name] = $value;
+    }
+    }
+    $replaced = $unreplaced;
+    }
+
+    return $result;
+    }
+     */
 
     public function clear()
     {
