@@ -3,7 +3,7 @@
 namespace App\Backticks\Syntax;
 
 use App\Backticks\Syntax\Exceptions\ParseErrorException;
-use App\Backticks\Syntax\StructureExtractor\DTO\Config;
+use App\Backticks\Syntax\DTO\StructureExtractorConfig;
 
 class StructureExtractor
 {
@@ -17,11 +17,13 @@ class StructureExtractor
 
     protected array $_replaced = [];
 
+    protected int $foundMatchesCount = 0;
+
     public function __construct(
-        protected ?Config $config = null,
+        protected ?StructureExtractorConfig $config = null,
     ){
         if (null === $this->config) {
-            $this->config = new Config();
+            $this->config = new StructureExtractorConfig();
         }
     }
 
@@ -34,6 +36,7 @@ class StructureExtractor
         {
             $iteration++;
             $replacements = [];
+            $this->foundMatchesCount += count($matches[0]);
             foreach($matches[0] as $match)
             {
                // $value = $matches[1][$i];
@@ -103,14 +106,14 @@ class StructureExtractor
 
     public function makeStructureName($index)
     {
-        return $this->config->structureLeftHash
-            . $this->config->structureLeftAdditional
+        return $this->config->leftHash
+            . $this->config->leftAdditional
             . $index
-            . $this->config->structureRightAdditional
-            . $this->config->structureRightHash;
+            . $this->config->rightAdditional
+            . $this->config->rightHash;
     }
 
-    public function matchStructures($string): ?array
+    public function matchStructures(string $string): ?array
     {
         preg_match_all(self::PREG_STRUCTURE, $string, $matches);
 
@@ -118,8 +121,13 @@ class StructureExtractor
     }
 
 
-    public function setConfig(Config $config): void
+    public function setConfig(StructureExtractorConfig $config): void
     {
         $this->config = $config;
+    }
+
+    public function getFoundMatchesCount(): int
+    {
+        return $this->foundMatchesCount;
     }
 }

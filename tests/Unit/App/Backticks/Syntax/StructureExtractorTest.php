@@ -3,12 +3,13 @@
 namespace App\Backticks\Syntax;
 
 use App\Backticks\Syntax\Exceptions\ParseErrorException;
-use App\Backticks\Syntax\StructureExtractor\DTO\Config;
+use App\Backticks\Syntax\DTO\StructureExtractorConfig;
 use PHPUnit\Framework\TestCase;
 
 class StructureExtractorTest extends TestCase
 {
     protected StructureExtractor $structureExtractor;
+
     public function __construct(string $name)
     {
         parent::__construct($name);
@@ -50,7 +51,7 @@ class StructureExtractorTest extends TestCase
      */
     public function test_extract_levels($input, $expected)
     {
-        $this->structureExtractor->setConfig(new Config(
+        $this->structureExtractor->setConfig(new StructureExtractorConfig(
             '',
             '',
             '{',
@@ -81,7 +82,7 @@ class StructureExtractorTest extends TestCase
      */
     public function test_all_the_way($input, $expected)
     {
-        $this->structureExtractor->setConfig(new Config(
+        $this->structureExtractor->setConfig(new StructureExtractorConfig(
             '',
             '',
             '{',
