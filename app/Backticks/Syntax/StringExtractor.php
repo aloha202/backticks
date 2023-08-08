@@ -3,6 +3,7 @@
 namespace App\Backticks\Syntax;
 
 use App\Backticks\Syntax\DTO\StringExtractorConfig;
+use App\Backticks\Syntax\Entity\StringEntity;
 use App\Backticks\Syntax\Exceptions\ParseErrorException;
 
 class StringExtractor
@@ -11,13 +12,21 @@ class StringExtractor
 
     protected array $_values = [];
     protected array $_literal = [];
+    protected array $_entities = [];
 
-    public function __construct(protected ?StringExtractorConfig $config = null)
-    {
+    public function __construct(
+        protected ?StringExtractorConfig $config = null,
+        protected ?LineParser $lineParser = null,
+    ) {
         if (null === $this->config)
         {
             $this->config = new StringExtractorConfig();
         }
+    }
+
+    public function setLineParser(?LineParser $lineParser = null)
+    {
+        $this->lineParser = $lineParser;
     }
 
     public function setConfig(StringExtractorConfig $config): void
@@ -36,24 +45,39 @@ class StringExtractor
     {
         $matches = $this->matchStrings($string);
 
-        $index = 1;
         if (is_array($matches) && is_array($matches[0])) {
-            $map = [];
-            foreach($matches[0] as $i => $match) {
-                if (array_key_exists($match, $map) === false) {
-                    $name = $this->makeStringReplacementName($index);
-                    $map[$match] = $name;
-                    $this->_values[$name] = str_replace("\'", "'", $matches[1][$i]);
-                    $this->_literal[$name] = $match;
-                    $index++;
-                }
-            }
 
-            $string = strtr($string, $map);
+            foreach($matches[0] as $i => $match) {
+                $name = $this->makeStringReplacementName($i + 1);
+                $value = str_replace("\'", "'", $matches[1][$i]);
+                $this->_values[$name] = $value;
+                $this->_literal[$name] = $match;
+
+                $pos = strpos($string, $match);
+                $realPos = $this->_pos($string, $match);
+                $len = strlen($match);
+                $replacedLen = strlen($name);
+
+                $entity = new StringEntity(
+                    $match,
+                    $value,
+                    $name,
+                    $realPos,
+                    $len,
+                    $pos,
+                    $replacedLen,
+                    $this->lineParser?->getLine($realPos),
+                );
+
+                $this->_entities[] = $entity;
+
+                $string = substr_replace($string, $name, $pos, $len);
+            }
         }
 
         if (str_contains($string, "'")) {
-            throw new ParseErrorException("Unexpected single quote");
+            $pos = $this->_pos($string, "'");
+            throw new ParseErrorException("Unexpected single quote", $pos);
         }
 
         return $string;
@@ -79,5 +103,29 @@ class StringExtractor
             . $index
             . $this->config->rightAdditional
             . $this->config->rightHash;
+    }
+
+    public function getEntities(): array
+    {
+        return $this->_entities;
+    }
+
+    protected function _pos(string $string, string $match): int
+    {
+        $pos = strpos($string, $match);
+
+        return $this->getRealPos($pos, $string);
+    }
+
+    public function getRealPos(int $pos, string $string): int
+    {
+        $left = substr($string, 0, $pos);
+        foreach($this->_entities as $entity) {
+            if (str_contains($left, $entity->name)) {
+                $pos -= $entity->delta;
+            }
+        }
+
+        return $pos;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Backticks\Syntax;
 
 use App\Backticks\Syntax\DTO\StringExtractorConfig;
+use App\Backticks\Syntax\Entity\StringEntity;
 use App\Backticks\Syntax\Exceptions\ParseErrorException;
 use PHPUnit\Framework\TestCase;
 
@@ -15,6 +16,62 @@ class StringExtractorTest extends TestCase
         parent::__construct($name);
 
         $this->stringExtractor = new StringExtractor();
+    }
+
+    /**
+     * @param $input
+     * @param $expected
+     * @dataProvider data_entities_positions
+     */
+    public function test_entities_positions($input, $expected)
+    {
+        $this->stringExtractor->extractStrings($input);
+
+        $this->assertEquals($expected, array_map(function(StringEntity $entity){
+            return $entity->originalPosition;
+        }, $this->stringExtractor->getEntities()));
+    }
+
+    public static function data_entities_positions()
+    {
+        return [
+            ["'hello' mister 'well-behaved'",
+            [0, 15]],
+            ["'hello' mister 'well-behaved'''",
+                [0, 15, 29]],
+            ["'hello' mister 'well-behaved''' ds s d s d s d s d' dfds dfds'fdsdfdsdsdffd85 4 3 3'\''",
+                [0, 15, 29, 50, 83]],
+        ];
+    }
+
+    /**
+     * @param $input
+     * @param $expected
+     * @dataProvider data_entities_position_exception
+     */
+    public function test_entities_position_exception($input, $expected)
+    {
+        $this->expectException(ParseErrorException::class);
+        try {
+            $this->stringExtractor->extractStrings($input);
+        } catch (ParseErrorException $e) {
+            $this->assertEquals($expected, $e->getPosition());
+            throw $e;
+        }
+    }
+
+    public static function data_entities_position_exception()
+    {
+        return [
+            [
+                "'hello' mister 'well-behaved''' ds s d s d s d s d' dfds dfds'fdsdfdsdsdffd85 4 3 3'\'' ' ",
+                88
+            ],
+            [
+                "'",
+                0
+            ]
+        ];
     }
 
     /**
@@ -137,19 +194,19 @@ class StringExtractorTest extends TestCase
             ["
             '        hello \'    \'   \'\'\'\'\'\'\'\'\\'        ' & '\'''\''
             ", "
-            [1] & [2][2]
+            [1] & [2][3]
             "],
             ["
             '        hello \'    \'   \'\'\'\'\'\'\'\'\\'\"  \\\\\\\\\\
                 ' & '\'''\''
             ", "
-            [1] & [2][2]
+            [1] & [2][3]
             "],
             ["
             ' ' & '''\\'
             ' ' ' '[]'
             ", "
-            [1] & [2][3] [1] [4]
+            [1] & [2][3] [4] [5]
             "],
 
         ];

@@ -2,6 +2,7 @@
 
 namespace App\Backticks\Syntax;
 
+use App\Backticks\Syntax\Entity\StructureEntity;
 use App\Backticks\Syntax\Exceptions\ParseErrorException;
 use App\Backticks\Syntax\DTO\StructureExtractorConfig;
 use PHPUnit\Framework\TestCase;
@@ -116,6 +117,80 @@ class StructureExtractorTest extends TestCase
     {
         $this->expectException($expected);
         $result = $this->structureExtractor->extractStructures($input);
+    }
+
+    /**
+     * @param $input
+     * @param $expected
+     * @dataProvider data_positions
+     */
+    public function test_positions($input, $expected)
+    {
+        $this->structureExtractor->extractStructures($input);
+        $result = array_map(function(StructureEntity $entity){
+            return $entity->originalPosition;
+        }, $this->structureExtractor->getEntities(true));
+        $this->assertEquals($expected, $result);
+        $this->structureExtractor->clear();
+    }
+
+    /**
+     * @param $input
+     * @param $expected
+     * @dataProvider data_lengths
+     */
+    public function test_lengths($input, $expected)
+    {
+        $this->structureExtractor->extractStructures($input);
+        $result = array_map(function(StructureEntity $entity){
+            return $entity->originalLength;
+        }, $this->structureExtractor->getEntities(true));
+        $this->assertEquals($expected, $result);
+        $this->structureExtractor->clear();
+    }
+
+    public static function data_lengths() {
+        return [
+            ['`~~`', [4]],
+            ['`~~``~~`', [4, 4]],
+            ['`~~``~`~~`~`', [4, 8, 4]],
+            ['`~`~~`~``~`~~`~`', [8, 4, 8, 4]],
+            ['`~`~`~~`~`~``~`~~`~`', [12, 8, 4, 8, 4]],
+            ['`~`~`~~`~`~``~`~~`~``~
+~`', [12, 8, 4, 8, 4, 5]],
+        ];
+    }
+
+    public static function data_positions()
+    {
+        return [
+            ['`~~`', [0]],
+            ['`~~``~~`', [0, 4]],
+            [' `~        ~``~~`', [1, 13]],
+            ['`~`~~`~``~`~~`~`', [0, 2, 8, 10]],
+            ['`~`~~`~``~`~
+
+    same thing here
+            ~`
+            noissse!
+            ~`', [0, 2, 8, 10]],
+
+            ['
+            `~`~~`~``~`~~`~`', [13, 15, 21, 23]],
+            ['`~`~~`~``~`~~`~`
+
+`~          `~~`~`
+            ', [0, 2, 8, 10, 18, 30]],
+
+            ['`~`~`~~`~`~`', [0, 2, 4]],
+            ['`~`~`~`~~`~`~`~``~`~`~`~~`~`~`~`', [0, 2, 4, 6, 16, 18, 20, 22]],
+            ['`~`~`~`~   ~`~`~`~``~`~`~`~~`~`~`~`', [0, 2, 4, 6, 19, 21, 23, 25]],
+            ['`~~``~`~~`~`', [0, 4, 6]],
+            ['`~~``~`~`~~`~`~`', [0, 4, 6, 8]],
+            ['`~`~`~~`~`~``~~`', [0, 2, 4, 12]],
+            ['`~`~`~~`~`~``~~``~~`', [0, 2, 4, 12, 16]],
+            ['`~`~`~~`~`~``~`~~`~``~~`', [0, 2, 4, 12, 14, 20]],
+        ];
     }
 
     public static function data_exceptions() {
@@ -249,14 +324,14 @@ more !<<> funny noise! !  ! ~~  ~
             ],
             [
                 ["`~`~~``~~`~`", 1],
-                '`~{1}{1}~`',
+                '`~{1}{2}~`',
             ],
             [
                 ["`~
                 `~~``~~`
                 ~`", 1],
                 "`~
-                {1}{1}
+                {1}{2}
                 ~`",
             ],
             [
@@ -264,7 +339,7 @@ more !<<> funny noise! !  ! ~~  ~
                 `~~``~~`~
                 ~`", 1],
                 "`~
-                {1}{1}~
+                {1}{2}~
                 ~`",
             ],
             [
@@ -272,7 +347,7 @@ more !<<> funny noise! !  ! ~~  ~
                 `~~`~`~~`~
                 ~`", 1],
                 "`~
-                {1}~{1}~
+                {1}~{2}~
                 ~`",
             ],
             [
@@ -281,17 +356,17 @@ more !<<> funny noise! !  ! ~~  ~
                 ~`
                 `~ hello world ~`", 1],
                 "`~
-                {1}{1}
+                {1}{2}
                 ~`
-                {2}",
+                {3}",
             ],
             [
                 ["`~
                 `~~``~~`
                 ~`
                 `~ hello world ~`", 2],
-                "{3}
-                {2}",
+                "{4}
+                {3}",
             ],
             [
                 ["    `~
