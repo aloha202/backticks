@@ -12,10 +12,13 @@ class Preprocessor
         protected StringExtractor $stringExtractor,
         protected StructureExtractor $structureExtractor,
         protected LineParser $lineParser,
+        protected PositionManager $positionManager,
     ) {
         $this->structureExtractor->setStringExtractor($this->stringExtractor);
         $this->stringExtractor->setLineParser($this->lineParser);
         $this->structureExtractor->setLineParser($this->lineParser);
+        $this->structureExtractor->setPositionManager($this->positionManager);
+        $this->stringExtractor->setPositionManager($this->positionManager);
     }
 
     public function prepare(string $string): string
@@ -63,7 +66,7 @@ class Preprocessor
 
         if ($sort) {
             usort($entities, function (SyntaxEntity $a, SyntaxEntity $b) {
-                return $a->originalPosition - $b->originalPosition;
+                return ($a->positionEntity?->originalPosition ?? 0) - ($b->positionEntity?->originalPosition ?? 0);
             });
         }
 

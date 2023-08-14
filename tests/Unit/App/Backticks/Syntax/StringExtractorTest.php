@@ -25,10 +25,11 @@ class StringExtractorTest extends TestCase
      */
     public function test_entities_positions($input, $expected)
     {
+        $this->stringExtractor->setPositionManager(new PositionManager());
         $this->stringExtractor->extractStrings($input);
 
         $this->assertEquals($expected, array_map(function(StringEntity $entity){
-            return $entity->originalPosition;
+            return $entity->positionEntity->originalPosition;
         }, $this->stringExtractor->getEntities()));
     }
 
@@ -51,6 +52,7 @@ class StringExtractorTest extends TestCase
      */
     public function test_entities_position_exception($input, $expected)
     {
+        $this->stringExtractor->setPositionManager(new PositionManager());
         $this->expectException(ParseErrorException::class);
         try {
             $this->stringExtractor->extractStrings($input);

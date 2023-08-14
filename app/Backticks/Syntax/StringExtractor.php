@@ -3,6 +3,7 @@
 namespace App\Backticks\Syntax;
 
 use App\Backticks\Syntax\DTO\StringExtractorConfig;
+use App\Backticks\Syntax\Entity\PositionEntity;
 use App\Backticks\Syntax\Entity\StringEntity;
 use App\Backticks\Syntax\Exceptions\ParseErrorException;
 
@@ -17,6 +18,7 @@ class StringExtractor
     public function __construct(
         protected ?StringExtractorConfig $config = null,
         protected ?LineParser $lineParser = null,
+        protected ?PositionManager $positionManager = null,
     ) {
         if (null === $this->config)
         {
@@ -27,6 +29,11 @@ class StringExtractor
     public function setLineParser(?LineParser $lineParser = null)
     {
         $this->lineParser = $lineParser;
+    }
+
+    public function setPositionManager(PositionManager $positionManager)
+    {
+        $this->positionManager = $positionManager;
     }
 
     public function setConfig(StringExtractorConfig $config): void
@@ -54,19 +61,12 @@ class StringExtractor
                 $this->_literal[$name] = $match;
 
                 $pos = strpos($string, $match);
-                $realPos = $this->_pos($string, $match);
                 $len = strlen($match);
-                $replacedLen = strlen($name);
-
                 $entity = new StringEntity(
                     $match,
                     $value,
                     $name,
-                    $realPos,
-                    $len,
-                    $pos,
-                    $replacedLen,
-                    $this->lineParser?->getLine($realPos),
+                    $this->_position($string, $match, $name),
                 );
 
                 $this->_entities[] = $entity;
@@ -110,22 +110,31 @@ class StringExtractor
         return $this->_entities;
     }
 
-    protected function _pos(string $string, string $match): int
+    protected function _pos(string $string, string $match): ?int
     {
-        $pos = strpos($string, $match);
-
-        return $this->getRealPos($pos, $string);
+        return $this->positionManager?->_pos($string, $match);
     }
 
-    public function getRealPos(int $pos, string $string): int
+    protected function _position(string $string, string $match, string $name): ?PositionEntity
     {
-        $left = substr($string, 0, $pos);
-        foreach($this->_entities as $entity) {
-            if (str_contains($left, $entity->name)) {
-                $pos -= $entity->delta;
-            }
+        if (null === $this->positionManager) {
+            return null;
         }
+        $pos = strpos($string, $match);
+        $realPos = $this->positionManager->_pos($string, $match);
+        $len = strlen($match);
+        $replacedLen = strlen($name);
 
-        return $pos;
+        $position = new PositionEntity(
+            $name,
+            $realPos,
+            $len,
+            $pos,
+            $replacedLen,
+            $this->lineParser?->getLine($realPos),
+        );
+        $this->positionManager->add($position);
+
+        return $position;
     }
 }

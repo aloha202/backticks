@@ -70,10 +70,7 @@ class StructureExtractorTest extends TestCase
     public function test_extract_level_number($input, $expected)
     {
         $this->structureExtractor->extractStructures($input);
-//        $matches = $this->structureExtractor->matchStructures("    {10}");
-//        print_r($matches);
         $this->assertEquals($expected, $this->structureExtractor->level);
-//        $this->assertEquals(1, 1);
     }
 
     /**
@@ -126,9 +123,10 @@ class StructureExtractorTest extends TestCase
      */
     public function test_positions($input, $expected)
     {
+        $this->structureExtractor->setPositionManager(new PositionManager());
         $this->structureExtractor->extractStructures($input);
         $result = array_map(function(StructureEntity $entity){
-            return $entity->originalPosition;
+            return $entity->positionEntity->originalPosition;
         }, $this->structureExtractor->getEntities(true));
         $this->assertEquals($expected, $result);
         $this->structureExtractor->clear();
@@ -141,9 +139,10 @@ class StructureExtractorTest extends TestCase
      */
     public function test_lengths($input, $expected)
     {
+        $this->structureExtractor->setPositionManager(new PositionManager());
         $this->structureExtractor->extractStructures($input);
         $result = array_map(function(StructureEntity $entity){
-            return $entity->originalLength;
+            return $entity->positionEntity->originalLength;
         }, $this->structureExtractor->getEntities(true));
         $this->assertEquals($expected, $result);
         $this->structureExtractor->clear();

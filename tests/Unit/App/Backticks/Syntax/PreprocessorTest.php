@@ -17,6 +17,7 @@ class PreprocessorTest extends TestCase
             new StringExtractor(),
             new StructureExtractor(),
             new LineParser(),
+            new PositionManager(),
         );
 
     }
@@ -43,7 +44,7 @@ class PreprocessorTest extends TestCase
         $this->preprocessor->prepare($input);
 
         $this->assertEquals($expected, array_map(function (SyntaxEntity $entity) {
-            return $entity->originalPosition;
+            return $entity->positionEntity->originalPosition;
         }, $this->preprocessor->getAllEntities(true)));
     }
 
@@ -57,7 +58,7 @@ class PreprocessorTest extends TestCase
         $this->preprocessor->prepare($input);
 
         $this->assertEquals($expected, array_map(function (SyntaxEntity $entity) {
-            return $entity->line;
+            return $entity->positionEntity->line;
         }, $this->preprocessor->getAllEntities(true)));
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Backticks\Syntax;
 
+use App\Backticks\Syntax\Entity\PositionEntity;
 use App\Backticks\Syntax\Entity\StructureEntity;
 use App\Backticks\Syntax\Exceptions\ParseErrorException;
 use App\Backticks\Syntax\DTO\StructureExtractorConfig;
@@ -32,10 +33,16 @@ class StructureExtractor
         protected ?StructureExtractorConfig $config = null,
         protected ?StringExtractor $stringExtractor = null,
         protected ?LineParser $lineParser = null,
+        protected ?PositionManager $positionManager = null,
     ){
         if (null === $this->config) {
             $this->config = new StructureExtractorConfig();
         }
+    }
+
+    public function setPositionManager(PositionManager $positionManager)
+    {
+        $this->positionManager = $positionManager;
     }
 
     public function setLineParser(?LineParser $lineParser = null)
@@ -65,18 +72,11 @@ class StructureExtractor
 
                 $pos = strpos($string, $match);
                 $len = strlen($match);
-                $realLen = $this->_strlen($match);
-                $realPos = $this->_pos($string, $match);
-                $replacedLen = strlen($name);
                 $entity = new StructureEntity(
                     $match,
                     $value,
                     $name,
-                    $realPos,
-                    $realLen,
-                    $pos,
-                    $replacedLen,
-                    $this->lineParser?->getLine($realPos),
+                    $this->_position($string, $match, $name),
                 );
                 $this->_entities[] = $entity;
                 $string = substr_replace($string, $name, $pos, $len);
@@ -182,55 +182,38 @@ class StructureExtractor
 
         $entities = $this->_entities;
         usort($entities, function(StructureEntity $a, StructureEntity $b){
-            return $a->originalPosition - $b->originalPosition;
+            return ($a->positionEntity?->originalPosition ?? 0) - ($b->positionEntity?->originalPosition ?? 0);
         });
 
         return $entities;
     }
 
-    protected function _strlen(string $match): int
+    protected function _pos(string $string, string $match): ?int
     {
-        $len = strlen($match);
-
-        foreach($this->_entities as $entity) {
-            if (str_contains($match, $entity->name)) {
-                $len -= $entity->delta;
-            }
-        }
-
-        /* @error remove this to reproduce 'missing string delta' error */
-        if (null !== $this->stringExtractor) {
-            foreach($this->stringExtractor->getEntities() as $entity) {
-                if (str_contains($match, $entity->name)) {
-                    $len -= $entity->delta;
-                }
-            }
-        }
-
-        return $len;
+        return $this->positionManager?->_pos($string, $match);
     }
 
-    protected function _pos(string $string, string $match): int
+    protected function _position(string $string, string $match, string $name): ?PositionEntity
     {
+        if (null === $this->positionManager) {
+            return null;
+        }
         $pos = strpos($string, $match);
+        $realPos = $this->positionManager->_pos($string, $match);
+        $len = $this->positionManager->_strlen($match);
+        $replacedLen = strlen($name);
 
-        return $this->getRealPos($pos, $string);
-    }
+        $position = new PositionEntity(
+            $name,
+            $realPos,
+            $len,
+            $pos,
+            $replacedLen,
+            $this->lineParser?->getLine($realPos),
+        );
+        $this->positionManager->add($position);
 
-    public function getRealPos(int $pos, string $string): int
-    {
-        $realPos = $pos;
-        if (null !== $this->stringExtractor) {
-            $realPos = $this->stringExtractor->getRealPos($pos, $string);
-        }
-        $left = substr($string, 0, $pos);
-        foreach($this->_entities as $entity) {
-            if (str_contains($left, $entity->name)) {
-                $realPos -= $entity->delta;
-            }
-        }
-
-        return $realPos;
+        return $position;
     }
 
 }

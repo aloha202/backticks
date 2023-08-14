@@ -4,18 +4,11 @@ namespace App\Backticks\Syntax\Entity;
 
 abstract class SyntaxEntity
 {
-    public int $delta = 0;
-
     public function __construct(
         public string $raw,
         public string $value,
         public string $name,
-        public int $originalPosition,
-        public int $originalLength,
-        public int $replacedPosition,
-        public int $replacedLength,
-        public ?int $line = null,
+        public ?PositionEntity $positionEntity,
     ) {
-        $this->delta = $this->replacedLength - $this->originalLength;
     }
 }
