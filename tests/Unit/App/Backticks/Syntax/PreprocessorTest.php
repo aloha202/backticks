@@ -230,6 +230,16 @@ class PreprocessorTest extends TestCase
             ['     '],
             ["  ''"],
             ["`~~`  '`~~`'"],
+            ["`~`~~`~`  `~'`~~`'~`"],
+            ["`~`~~`~`  `~'`~~`''another string here''and another'~`"],
+            ["`~`~
+                `~
+                    more levels
+                    `~
+                    'one more string'
+                    ~`
+                ~`
+            ~`~`  `~'`~~`''another string here''and another'~`"],
         ];
     }
 }
