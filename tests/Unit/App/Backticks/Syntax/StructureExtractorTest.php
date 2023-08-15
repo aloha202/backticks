@@ -343,10 +343,10 @@ more !<<> funny noise! !  ! ~~  ~
             ],
             [
                 ["`~
-                `~~`~`~~`~
+                `~~` ~ `~~`~
                 ~`", 1],
                 "`~
-                {1}~{2}~
+                {1} ~ {2}~
                 ~`",
             ],
             [
@@ -493,97 +493,97 @@ more !<<> funny noise! !  ! ~~  ~
                 "    {10}"],
 
             [["
-                `~ here comes the code separaterd by ~
-                    one more command ~
-                    finally ~
+                `~ here comes the code separaterd by !
+                    one more command !
+                    finally !
                     `~
-                        som more here ~
-                        and here we go ~
+                        som more here !
+                        and here we go !
                         `~
-                            level three code ~
+                            level three code !
                             more here
-                        ~` ~
-                        finally ~
+                        ~` !
+                        finally !
 
                         `~
                             another level3
-                        ~` ~
+                        ~` !
 
                     ~`
                 ~` <div here>
-                `~ some funny ~
+                `~ some funny !
                     `~ hello ~`
-                code here ~ ~`
+                code here ! ~`
             ", 1], "
-                `~ here comes the code separaterd by ~
-                    one more command ~
-                    finally ~
+                `~ here comes the code separaterd by !
+                    one more command !
+                    finally !
                     `~
-                        som more here ~
-                        and here we go ~
-                        {1} ~
-                        finally ~
+                        som more here !
+                        and here we go !
+                        {1} !
+                        finally !
 
-                        {2} ~
+                        {2} !
 
                     ~`
                 ~` <div here>
-                `~ some funny ~
+                `~ some funny !
                     {3}
-                code here ~ ~`
+                code here ! ~`
             "],
             [["
-                `~ here comes the code separaterd by ~
-                    one more command ~
-                    finally ~
+                `~ here comes the code separaterd by !
+                    one more command !
+                    finally !
                     `~
-                        som more here ~
-                        and here we go ~
+                        som more here !
+                        and here we go !
                         `~
-                            level three code ~
+                            level three code !
                             more here
-                        ~` ~
-                        finally ~
+                        ~` !
+                        finally !
 
                         `~
                             another level3
-                        ~` ~
+                        ~` !
 
                     ~`
                 ~` <div here>
-                `~ some funny ~
+                `~ some funny !
                     `~ hello ~`
-                code here ~ ~`
+                code here ! ~`
             ", 2], "
-                `~ here comes the code separaterd by ~
-                    one more command ~
-                    finally ~
+                `~ here comes the code separaterd by !
+                    one more command !
+                    finally !
                     {4}
                 ~` <div here>
                 {5}
             "],
             [["
-                `~ here comes the code separaterd by ~
-                    one more command ~
-                    finally ~
+                `~ here comes the code separaterd by `
+                    one more command `
+                    finally `
                     `~
-                        som more here ~
-                        and here we go ~
+                        som more here `
+                        and here we go `
                         `~
-                            level three code ~
+                            level three code `
                             more here
-                        ~` ~
-                        finally ~
+                        ~` `
+                        finally `
 
                         `~
                             another level3
-                        ~` ~
+                        ~` `
 
                     ~`
                 ~` <div here>
-                `~ some funny ~
+                `~ some funny `
                     `~ hello ~`
-                code here ~ ~`
+                code here ` ~`
             ", 3], "
                 {6} <div here>
                 {5}

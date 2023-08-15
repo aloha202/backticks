@@ -158,7 +158,59 @@ class StructureExtractor
 
     public function matchStructures(string $string): ?array
     {
+        return $this->matchStructuresNew($string);
+        /*
         preg_match_all(self::PREG_STRUCTURE, $string, $matches);
+
+        return $matches;
+        */
+    }
+
+    public function matchStructuresNew(string $string): ?array
+    {
+        $lookback = true;
+        $recording = false;
+        $substr = '';
+
+        $found = [];
+
+        for($i = 0; $i < strlen($string); $i++) {
+            $char = $string[$i];
+            $prev = $i && $lookback ? $string[$i - 1] : '';
+
+            $seq = $prev . $char;
+            if ($seq === '`~') {
+                $recording = true;
+                $substr = '';
+                $lookback = false;
+                continue;
+            }
+
+            if ($seq === '~`') {
+                if ($recording) {
+                    $found[] = substr_replace($substr, '', strlen($substr) - 1);
+                    $substr = '';
+                    $recording = false;
+                }
+                $lookback = false;
+                continue;
+            }
+
+            if ($recording) {
+                $substr .= $char;
+            }
+
+            $lookback = true;
+        }
+
+        $matches = [];
+        $matches[0] = [];
+        $matches[1] = [];
+
+        foreach($found as $i => $value) {
+            $matches[0][$i] = '`~' . $value .'~`';
+            $matches[1][$i] = $value;
+        }
 
         return $matches;
     }

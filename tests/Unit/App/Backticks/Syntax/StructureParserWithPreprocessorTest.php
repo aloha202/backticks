@@ -286,10 +286,17 @@ command4~`", [2, 4, 6, 8]],
             ~`", [1, 2, 3, 4, 5, 5, 5, 7]],
 
             ["`~
-            request | get : item | if : `~@it|lowercase = 'test' and request|get : product = 12~` | do: `~
+            request | get : item | if : `@it|lowercase = 'test' and request|get : product = 12` | do: `~
                 mysql | query : 'SELECT * FROM `table` WHERE `field`=GOOD' | pluck : name,age | var : @people
             ~` | else | do: `~ NULL | var: @people ~`
-            ~`", [1, 1, 2, 3]],
+            ~`", [1, 2, 3]],
+
+            ["`~
+
+request | get : item | if : `@it|lowercase = 'test' and request|get : product = 12` | do: `~
+    mysql | query : 'SELECT * FROM `table` WHERE `field`=GOOD' | pluck : name,age | var : @people
+~` | else | do: `~ NULL | var: @people ~`
+            ~`", [2, 3, 4]],
         ];
     }
 
@@ -423,8 +430,9 @@ command3~command4
             ["''''", [4]],
             ["''~''''", [2,4]],
             ["''~''''~", [2,4, 0]],
-            ["''~''''~`~''~`", [2,4, 6]],
-            ["''~''''~`~''~`~ `~`~`~~`~`~` ", [2,4, 6, 14]],
+            ["''~''''~ `~''~`", [2,4, 7]],
+            ["''~''''~ `~''~` ~ `~`~`~~`~`~` ", [2,4, 8, 14]],
+            ["''~''''~ `~''~` ~ `~`~`~ `` ~`~`~` ", [2,4, 8, 18]],
         ];
     }
 
@@ -433,9 +441,9 @@ command3~command4
         return [
             [' ~ ', [0,2]],
             ["''~ ", [0,3]],
-            ["''~`~~`~ ", [0,3, 8]],
-            ["''~`~''~`~ ", [0,3, 10]],
-            ["''~`~`~''~`~`~ ", [0,3, 14]],
+            ["'' ~ `~~` ~ ", [0,4, 11]],
+            ["'' ~ `~''~` ~ ", [0,4, 13]],
+            ["'' ~ `~`~''~`~` ~ ", [0,4, 17]],
         ];
     }
 }
