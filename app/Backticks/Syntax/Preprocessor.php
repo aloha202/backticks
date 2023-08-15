@@ -72,4 +72,29 @@ class Preprocessor
 
         return $entities;
     }
+
+    /**
+     * @param false $sort
+     * @return Entity\StructureEntity[]
+     */
+    public function getStructureEntities($sort = false)
+    {
+        return $this->structureExtractor->getEntities($sort);
+    }
+
+
+    public function getPositionManager(): PositionManager
+    {
+        return $this->positionManager;
+    }
+
+    public function getLineParser(): LineParser
+    {
+        return $this->lineParser;
+    }
+
+    public function getLine(int $pos): ?int
+    {
+        return $this->lineParser->getLine($pos);
+    }
 }

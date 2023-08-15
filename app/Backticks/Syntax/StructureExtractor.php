@@ -174,6 +174,10 @@ class StructureExtractor
         return $this->foundMatchesCount;
     }
 
+    /**
+     * @param false $sort
+     * @return StructureEntity[]
+     */
     public function getEntities($sort = false): array
     {
         if (false === $sort) {

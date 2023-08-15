@@ -8,7 +8,12 @@ abstract class SyntaxEntity
         public string $raw,
         public string $value,
         public string $name,
-        public ?PositionEntity $positionEntity,
+        public ?PositionEntity $positionEntity = null,
     ) {
+    }
+
+    public function getPos(): int
+    {
+        return $this->positionEntity?->originalPosition ?? 0;
     }
 }
