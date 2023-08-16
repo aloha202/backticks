@@ -31,28 +31,31 @@ class StructureExtractor
 
     public function __construct(
         protected ?StructureExtractorConfig $config = null,
-        protected ?StringExtractor $stringExtractor = null,
         protected ?LineParser $lineParser = null,
         protected ?PositionManager $positionManager = null,
+        protected ?SubstructureExtractor $substructureExtractor = null,
     ){
         if (null === $this->config) {
             $this->config = new StructureExtractorConfig();
+        }
+
+        if (null === $this->substructureExtractor) {
+            $this->substructureExtractor = new SubstructureExtractor(
+                null,
+                $this->positionManager,
+            );
         }
     }
 
     public function setPositionManager(PositionManager $positionManager)
     {
         $this->positionManager = $positionManager;
+        $this->substructureExtractor?->setPositionManager($positionManager);
     }
 
     public function setLineParser(?LineParser $lineParser = null)
     {
         $this->lineParser = $lineParser;
-    }
-
-    public function setStringExtractor(?StringExtractor $stringExtractor)
-    {
-        $this->stringExtractor = $stringExtractor;
     }
 
     public function extractStructures($string, $level = null): string
@@ -78,6 +81,10 @@ class StructureExtractor
                     $name,
                     $this->_position($string, $match, $name),
                 );
+
+                $this->_prepare($entity);
+
+
                 $this->_entities[] = $entity;
                 $string = substr_replace($string, $name, $pos, $len);
                 $i++;
@@ -270,6 +277,19 @@ class StructureExtractor
         $this->positionManager->add($position);
 
         return $position;
+    }
+
+    public function _prepare(StructureEntity $entity)
+    {
+        if ($this->substructureExtractor)
+        {
+            $entity->preparedValue = $this->substructureExtractor->prepare($entity->value);
+            $entity->_substructures = $this->substructureExtractor->getPreparedEntities();
+            foreach($entity->_substructures as $substructure)
+            {
+                $substructure->structure = $entity;
+            }
+        }
     }
 
 }

@@ -27,7 +27,8 @@ class StructureParser
     {
         $currentPos = 0;
         $deltaLen = strlen(self::DELIM);
-        $string = $structureEntity->value;
+        $string = $structureEntity->preparedValue;
+
         $exploded = explode(self::DELIM, $string);
         foreach($exploded as $i => $value) {
             $pos = strpos($string, $value);
@@ -35,7 +36,7 @@ class StructureParser
             $len = strlen($value);
             $command = new Command(
                 $value,
-                $this->_position($realPos, $value, $structureEntity->value),
+                $this->_position($realPos, $value, $structureEntity->preparedValue),
                 $structureEntity,
             );
             $structureEntity->_commands[] = $command;

@@ -45,6 +45,36 @@ class StructureParserWithPreprocessorTest extends TestCase
     /**
      * @param $input
      * @param $expected
+     * @dataProvider data_with_substructures
+     */
+    public function test_with_substructures($input, $expected)
+    {
+        $input = $this->preprocessor->prepare($input);
+        $entity = new StructureEntity($input, $input, $input);
+        $this->preprocessor->_prepareStructure($entity);
+        $this->structureParser->parse($entity);
+
+        $result = array_map(function(Command $command) {
+            return $command->getPos();
+        }, $this->structureParser->_commands);
+
+        $this->assertEquals($expected, $result);
+        $this->structureParser->clear();
+        $this->preprocessor->clear();
+
+    }
+
+    public static function data_with_substructures()
+    {
+        return [
+       //     [" test ~ full", [1, 8]],
+            ["``''test ~ full", [0, 11]],
+        ];
+    }
+
+    /**
+     * @param $input
+     * @param $expected
      * @dataProvider data_lengths
      */
     public function test_lengths($input, $expected)
@@ -116,6 +146,8 @@ class StructureParserWithPreprocessorTest extends TestCase
         $this->assertEquals($expected, $positions);
     }
 
+
+
     public static function data_full_parse_positions()
     {
         return [
@@ -136,7 +168,7 @@ class StructureParserWithPreprocessorTest extends TestCase
         $positions = [];
         foreach($structures as $structureEntity) {
             $this->structureParser->parse($structureEntity);
-            $positions = array_merge($positions, array_map(function(Command $command) use ($structureEntity) {
+            $positions = array_merge($positions, array_map(function(Command $command) {
                 return $command->getFullPos();
             }, $this->structureParser->_commands));
             $this->structureParser->clear();
@@ -176,6 +208,61 @@ class StructureParserWithPreprocessorTest extends TestCase
         }, $positions);
 
         $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @param $input
+     * @param $expected
+     * @dataProvider data_full_parse_lines_and_positions_in_lines_real
+     */
+    public function test_full_parse_lines_and_positions_in_lines_real($input, $expected)
+    {
+        $this->preprocessor->prepare($input);
+        $structures = $this->preprocessor->getStructureEntities(true);
+        $positions = [];
+        foreach($structures as $structureEntity) {
+            $this->structureParser->parse($structureEntity);
+            $positions = array_merge($positions, array_map(function(Command $command) {
+                return $command->getFullPos();
+            }, $this->structureParser->_commands));
+            $this->structureParser->clear();
+        }
+
+        sort($positions);
+
+        $result = array_map(function (int $pos) {
+            return $this->preprocessor->getLineAndPositionInLine($pos);
+        }, $positions);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public static function data_full_parse_lines_and_positions_in_lines_real()
+    {
+        return [
+            ["`~
+com1 ~
+com2 'a little string' : `~ com3 ~ com4 : `~
+com5 ~ com6 `sub1` `sub2` `sub3`
+~` | 'another multiline
+string'
+~` ~
+`sub` com7: `~
+com8: `~
+' multiline string
+for ' | com9 | plus: in backticks | do : `~
+com10 ~ com11 ~ com12 : `~
+com13
+~ com14
+~`
+~`
+~`
+~` ~
+some `sub` ' here comes a
+nother multiline
+string' that is for `sub2` com15 ~com16
+            ~`", [[1, 0], [2, 0], [2, 28], [2, 35], [3, 0], [3, 7], [7, 0], [8, 0], [9, 0], [11, 0], [11, 8], [11, 16], [12, 0], [13, 2], [18, 0], [20, 34]]],
+        ];
     }
 
 
@@ -297,6 +384,29 @@ request | get : item | if : `@it|lowercase = 'test' and request|get : product = 
     mysql | query : 'SELECT * FROM `table` WHERE `field`=GOOD' | pluck : name,age | var : @people
 ~` | else | do: `~ NULL | var: @people ~`
             ~`", [2, 3, 4]],
+
+            ["`~
+com1 ~
+com2 'a little string' : `~ com3 ~ com4 : `~
+com5 ~ com6
+~` | 'another multiline
+string'
+~` ~
+com7: `~
+com8: `~
+' multiline string
+for ' | com9 | plus: `in backticks` | do : `~
+com10 ~ com11 ~ com12 : `~
+com13
+~ com14
+~`
+~`
+~`
+~` ~
+' here comes a
+nother multiline
+string' that is for com15 ~ com16
+            ~`", [1, 2, 2, 2, 3, 3, 7, 8, 9, 11, 11, 11, 12, 13, 18, 20]],
         ];
     }
 

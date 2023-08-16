@@ -47,4 +47,9 @@ class PositionManager
 
         return $len;
     }
+
+    public function clear()
+    {
+        $this->_entities = [];
+    }
 }

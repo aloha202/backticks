@@ -4,6 +4,7 @@ namespace App\Backticks\Syntax;
 
 use App\Backticks\Syntax\DTO\StringExtractorConfig;
 use App\Backticks\Syntax\DTO\StructureExtractorConfig;
+use App\Backticks\Syntax\Entity\StructureEntity;
 use App\Backticks\Syntax\Entity\SyntaxEntity;
 
 class Preprocessor
@@ -13,8 +14,8 @@ class Preprocessor
         protected StructureExtractor $structureExtractor,
         protected LineParser $lineParser,
         protected PositionManager $positionManager,
+        protected ?StructureParser $structureParser = null,
     ) {
-        $this->structureExtractor->setStringExtractor($this->stringExtractor);
         $this->stringExtractor->setLineParser($this->lineParser);
         $this->structureExtractor->setLineParser($this->lineParser);
         $this->structureExtractor->setPositionManager($this->positionManager);
@@ -96,5 +97,33 @@ class Preprocessor
     public function getLine(int $pos): ?int
     {
         return $this->lineParser->getLine($pos);
+    }
+
+    public function getLineAndPositionInLine(int $pos): ?array
+    {
+        return $this->lineParser->getLineAndPositionInLine($pos);
+    }
+
+    public function clear()
+    {
+        $this->structureExtractor->clear();
+        $this->stringExtractor->clear();
+        $this->positionManager->clear();
+    }
+
+    public function prepareCommands()
+    {
+        $structures = $this->getStructureEntities(true);
+
+        foreach($structures as $structureEntity) {
+            $this->structureParser->parse($structureEntity);
+        }
+
+        return $this->structureParser->_commands;
+    }
+
+    public function _prepareStructure(StructureEntity $entity)
+    {
+        $this->structureExtractor->_prepare($entity);
     }
 }

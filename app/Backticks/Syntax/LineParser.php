@@ -12,12 +12,24 @@ class LineParser
 
     public function getLine(int $pos): ?int
     {
+        $linePos = $this->getLineAndPositionInLine($pos);
+        return null === $linePos ? null : $linePos[0];
+    }
+
+    public function getPositionInLine(int $pos): ?int
+    {
+        $linePos = $this->getLineAndPositionInLine($pos);
+        return null === $linePos ? null : $linePos[1];
+    }
+
+    public function getLineAndPositionInLine(int $pos): ?array
+    {
         $len = 0;
         foreach($this->splitted as $line => $string)
         {
             $lineLen = strlen($string) + 1;
             if ($pos >= $len && $pos < $len + $lineLen) {
-                return $line;
+                return [$line, $pos - $len];
             }
             $len += $lineLen;
         }

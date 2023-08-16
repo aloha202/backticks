@@ -94,6 +94,7 @@ class StringExtractor
     {
         $this->_values = [];
         $this->_literal = [];
+        $this->_entities = [];
     }
 
     public function makeStringReplacementName($index)
