@@ -3,7 +3,8 @@
 namespace App\Backticks\Syntax;
 
 use App\Backticks\Syntax\Entity\SubstructureEntity;
-use App\Backticks\Syntax\Structure\Command;
+use App\Backticks\Syntax\Exceptions\SubstructureParseErrorException;
+use App\Backticks\Syntax\Entity\Command;
 use PHPUnit\Framework\TestCase;
 
 class SubstructureExtractorTest extends TestCase
@@ -125,6 +126,179 @@ class SubstructureExtractorTest extends TestCase
         $this->assertEquals($expected, $linesAndPos);
 
         $this->preprocessor->clear();
+    }
+
+    /**
+     * @param $input
+     * @param $expected
+     * @dataProvider data_with_commands_full_parse
+     */
+    public function test_with_commands_full_parse($input, $expected)
+    {
+        $this->preprocessor->prepare($input);
+        $structures = $this->preprocessor->getStructureEntities(true);
+        $positions = [];
+        foreach($structures as $structureEntity) {
+            $positions = array_merge($positions, array_map(function(SubstructureEntity $sub) {
+                return $sub->_command->getFullPos();
+            }, $structureEntity->_substructures));
+        }
+
+        sort($positions);
+
+        $linesAndPos = array_map(function (int $pos) {
+            return $this->preprocessor->getLineAndPositionInLine($pos);
+        }, $positions);
+
+        $this->assertEquals($expected, $linesAndPos);
+
+        $this->preprocessor->clear();
+    }
+
+    /**
+     * @param $input
+     * @param $expected
+     * @dataProvider data_conditional_or_command_full_parse
+     */
+    public function test_conditional_or_command_full_parse($input, $expected)
+    {
+        $this->preprocessor->prepare($input);
+        $structures = $this->preprocessor->getStructureEntities(true);
+        $all_subs = [];
+        foreach($structures as $structureEntity) {
+            $all_subs = array_merge($all_subs, $structureEntity->_substructures);
+        }
+
+        usort($all_subs, function (SubstructureEntity $a, SubstructureEntity $b) {
+            return $a->getFullPos() - $b->getFullPos();
+        });
+
+        $result = array_map(function (SubstructureEntity $sub) {
+            return $sub->_command->isConditional();
+        }, $all_subs);
+
+        $this->assertEquals($expected, $result);
+
+        $this->preprocessor->clear();
+    }
+
+    /**
+     * @param $input
+     * @param $expected
+     * @dataProvider data_exceptions
+     */
+    public function test_exceptions($input, $expected)
+    {
+        $this->expectException($expected);
+        $this->substructureExtractor->prepare($input);
+    }
+
+    /**
+     * @param $input
+     * @param $expected
+     * @dataProvider data_exceptions_positions_full_parse
+     */
+    public function test_exceptions_positions_full_parse($input, $expected)
+    {
+        try {
+            $this->preprocessor->prepare($input);
+        } catch(SubstructureParseErrorException $e) {
+            $this->assertEquals($expected, $this->preprocessor->getLineAndPositionInLine($e->getPosition()));
+        }
+    }
+
+    public static function data_exceptions_positions_full_parse()
+    {
+        return [
+            [" `~
+            `one sub`
+` unterminated
+            ~`", [2, 0]],
+            [" `~
+                `command` `~ `,&& good` ` unterminado ~`
+                `conditional >`
+            ~` `~  '''' `command`
+                `~
+                    `~ ===== '' `=` ~`
+                ~`
+            ~`", [1, 40]],
+        ];
+    }
+
+    public static function data_exceptions()
+    {
+        return [
+            [" htello `substr1`  unterminated ` backtick", SubstructureParseErrorException::class],
+        ];
+    }
+
+
+    public static function data_conditional_or_command_full_parse()
+    {
+        return [
+            [" `~
+                `command`
+                `conditional >`
+            ~`", [0, 1]],
+
+            [" `~
+                `command` `~ `,&& good` ~`
+                `conditional >`
+            ~`", [0, 1, 1]],
+
+            [" `~
+                `command` `~ `,&& good` ~`
+                `conditional >`
+            ~` `~  '''' `command`
+                `~
+                    `~ ===== '' `=` ~`
+                ~`
+            ~`", [0, 1, 1, 0, 1]],
+        ];
+    }
+
+    public static function data_with_commands_full_parse() {
+        return [
+            [" `~
+`command `
+`command2`
+            ~`
+            ", [
+                [1, 1],
+                [2, 1]
+            ]
+            ],
+
+            [" `~
+`    command `
+`     command2`
+            ~`
+            ", [
+                [1, 5],
+                [2, 6]
+            ]
+            ],
+
+            [" `~
+            ' this is multi
+            line string
+            '
+            `    command `
+            `~`~
+`   ' '  command2`
+~`~`
+`command3``command4`''`
+command5`
+            ~`
+            ", [
+                [4, 17],
+                [6, 4],
+                [8, 1],
+                [8, 11],
+                [9, 0],
+            ]
+            ],
+        ];
     }
 
     public static function data_lines_full_parse()

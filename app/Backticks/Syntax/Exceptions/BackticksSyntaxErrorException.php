@@ -20,4 +20,9 @@ class BackticksSyntaxErrorException extends BacktickException
     {
         return $this->position;
     }
+
+    public function setPosition(int $position)
+    {
+        $this->position = $position;
+    }
 }

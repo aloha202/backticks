@@ -4,7 +4,7 @@ namespace App\Backticks\Syntax;
 
 use App\Backticks\Syntax\Entity\PositionEntity;
 use App\Backticks\Syntax\Entity\StructureEntity;
-use App\Backticks\Syntax\Structure\Command;
+use App\Backticks\Syntax\Entity\Command;
 
 class StructureParser
 {

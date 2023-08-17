@@ -1,9 +1,6 @@
 <?php
 
-namespace App\Backticks\Syntax\Structure;
-
-use App\Backticks\Syntax\Entity\PositionEntity;
-use App\Backticks\Syntax\Entity\StructureEntity;
+namespace App\Backticks\Syntax\Entity;
 
 class Command
 {
@@ -14,6 +11,7 @@ class Command
         public string          $rawValue,
         public ?PositionEntity $positionEntity = null,
         public ?StructureEntity $structure = null,
+        public ?SubstructureEntity $subStructure = null,
     ) {
         $this->value = trim($this->rawValue);
         $this->trimOffset = strpos($this->rawValue, $this->value);
@@ -26,6 +24,12 @@ class Command
 
     public function getFullPos(): int
     {
-        return $this->getPos() + ($this->structure?->getPos() ?? 0) + ($this->structure?->getLeftOffset() ?? 0);
+        return $this->getPos() + ($this->structure?->getPos() ?? 0) + ($this->structure?->getLeftOffset() ?? 0)
+            + ($this->subStructure?->getFullPos() ?? 0);
+    }
+
+    public function isConditional()
+    {
+        return $this instanceof Conditional;
     }
 }

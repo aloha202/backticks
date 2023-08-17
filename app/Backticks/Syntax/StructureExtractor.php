@@ -6,6 +6,7 @@ use App\Backticks\Syntax\Entity\PositionEntity;
 use App\Backticks\Syntax\Entity\StructureEntity;
 use App\Backticks\Syntax\Exceptions\ParseErrorException;
 use App\Backticks\Syntax\DTO\StructureExtractorConfig;
+use App\Backticks\Syntax\Exceptions\SubstructureParseErrorException;
 use Psy\Util\Str;
 
 class StructureExtractor
@@ -283,11 +284,15 @@ class StructureExtractor
     {
         if ($this->substructureExtractor)
         {
-            $entity->preparedValue = $this->substructureExtractor->prepare($entity->value);
-            $entity->_substructures = $this->substructureExtractor->getPreparedEntities();
-            foreach($entity->_substructures as $substructure)
-            {
-                $substructure->structure = $entity;
+            try {
+                $entity->preparedValue = $this->substructureExtractor->prepare($entity->value);
+                $entity->_substructures = $this->substructureExtractor->getPreparedEntities();
+                foreach ($entity->_substructures as $substructure) {
+                    $substructure->structure = $entity;
+                }
+            } catch (SubstructureParseErrorException $e) {
+                $e->setPosition($e->getPosition() + $entity->getLeftOffset() + $entity->getPos());
+                throw $e;
             }
         }
     }

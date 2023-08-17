@@ -5,6 +5,7 @@ namespace App\Backticks\Syntax;
 use App\Backticks\Syntax\DTO\SubstructureExtractorConfig;
 use App\Backticks\Syntax\Entity\PositionEntity;
 use App\Backticks\Syntax\Entity\SubstructureEntity;
+use App\Backticks\Syntax\Exceptions\SubstructureParseErrorException;
 
 class SubstructureExtractor
 {
@@ -54,6 +55,11 @@ class SubstructureExtractor
 
                 $string = substr_replace($string, $name, $pos, $len);
             }
+        }
+
+        if (str_contains($string, '`')) {
+            $pos = $this->positionManager?->_pos($string, '`') ?? strpos($string, '`');
+            throw new SubstructureParseErrorException("Unterminated backtick character", $pos);
         }
 
         return $string;

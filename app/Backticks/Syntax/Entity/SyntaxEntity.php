@@ -10,10 +10,15 @@ abstract class SyntaxEntity
         public string $name,
         public ?PositionEntity $positionEntity = null,
     ) {
+        $this->evaluate();
     }
 
     public function getPos(): int
     {
         return $this->positionEntity?->originalPosition ?? 0;
+    }
+
+    protected function evaluate()
+    {
     }
 }
