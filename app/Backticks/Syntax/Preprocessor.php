@@ -31,6 +31,23 @@ class Preprocessor
         return $string;
     }
 
+    public function parse()
+    {
+        if (null === $this->structureParser) {
+            throw new \Exception('Structure parse is undefined');
+        }
+
+        foreach($this->getStructureEntities(true) as $structureEntity) {
+            $this->structureParser->parse($structureEntity);
+
+            foreach($structureEntity->_substructures as $substructure) {
+                if ($substructure->_command->isConditional() === false) {
+                    $this->structureParser->parseSingleCommand($substructure->_command);
+                }
+            }
+        }
+    }
+
     public function replaceBack(string $string, $raw = false): string
     {
         $string = $this->structureExtractor->replaceBack($string);
@@ -125,5 +142,10 @@ class Preprocessor
     public function _prepareStructure(StructureEntity $entity)
     {
         $this->structureExtractor->_prepare($entity);
+    }
+
+    public function setStructureParser(StructureParser $structureParser)
+    {
+        $this->structureParser = $structureParser;
     }
 }

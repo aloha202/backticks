@@ -2,11 +2,24 @@
 
 namespace App\Backticks\Syntax\Entity;
 
+use App\Backticks\Syntax\Command\AbstractCommandPart;
+use App\Backticks\Syntax\Command\Head;
+use App\Backticks\Syntax\Command\Method;
+
 class Command
 {
     public string $value;
     public ?int $pos = null;
     public int $trimOffset;
+    /**
+     * @var array<AbstractCommandPart>
+     */
+    public array $parts = [];
+    public Head $head;
+    /**
+     * @var array<Method>
+     */
+    public array $methods = [];
     public function __construct(
         public string          $rawValue,
         public ?PositionEntity $positionEntity = null,

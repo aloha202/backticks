@@ -23,10 +23,10 @@ class StructureParserTest extends TestCase
      */
     public function test_parse($input, $expected)
     {
-        $this->structureParser->parse(new StructureEntity($input, $input, $input));
+        $structure = $this->structureParser->parse(new StructureEntity($input, $input, $input));
         $result = array_map(function(Command $command) {
             return $command->value;
-        }, $this->structureParser->_commands);
+        }, $structure->_commands);
 
         $this->assertEquals($expected, $result);
     }
@@ -39,10 +39,10 @@ class StructureParserTest extends TestCase
     public function test_positions($input, $expected)
     {
         $this->structureParser->setPositionManager(new PositionManager());
-        $this->structureParser->parse(new StructureEntity($input, $input, $input));
+        $structure = $this->structureParser->parse(new StructureEntity($input, $input, $input));
         $result = array_map(function(Command $command) {
             return $command->positionEntity->originalPosition;
-        }, $this->structureParser->_commands);
+        }, $structure->_commands);
 
         $this->assertEquals($expected, $result);
     }
@@ -57,10 +57,10 @@ class StructureParserTest extends TestCase
         $lineParser = new LineParser();
         $lineParser->parse($input);
         $this->structureParser->setPositionManager(new PositionManager());
-        $this->structureParser->parse(new StructureEntity($input, $input, $input));
+        $structure = $this->structureParser->parse(new StructureEntity($input, $input, $input));
         $result = array_map(function(Command $command) use ($lineParser) {
             return $lineParser->getLine($command->positionEntity->originalPosition);
-        }, $this->structureParser->_commands);
+        }, $structure->_commands);
 
         $this->assertEquals($expected, $result);
     }

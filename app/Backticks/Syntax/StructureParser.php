@@ -14,6 +14,7 @@ class StructureParser
 
     public function __construct(
         public ?PositionManager $positionManager = null,
+        public ?CommandParser $commandParser = null,
     ) {
 
     }
@@ -23,7 +24,15 @@ class StructureParser
         $this->positionManager = $positionManager;
     }
 
-    public function parse(StructureEntity $structureEntity)
+    public function setCommandParser(CommandParser $commandParser)
+    {
+        $this->commandParser = $commandParser;
+        if (null !== $this->positionManager) {
+            $this->commandParser->setPositionManager($this->positionManager);
+        }
+    }
+
+    public function parse(StructureEntity $structureEntity): StructureEntity
     {
         $currentPos = 0;
         $deltaLen = strlen(self::DELIM);
@@ -39,12 +48,24 @@ class StructureParser
                 $this->_position($realPos, $value, $structureEntity->preparedValue),
                 $structureEntity,
             );
+
+            if (null !== $this->commandParser) {
+                $this->commandParser->parse($command);
+            }
+
             $structureEntity->_commands[] = $command;
             $this->_commands[] = $command;
 
             $string = substr_replace($string, '', $pos, $len + $deltaLen);
             $currentPos += $len + $deltaLen;
         }
+
+        return $structureEntity;
+    }
+
+    public function parseSingleCommand(Command $command): Command
+    {
+        return $this->commandParser->parse($command);
     }
 
     protected function _position(int $pos, string $value, string $string): ?PositionEntity
