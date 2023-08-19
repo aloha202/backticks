@@ -18,22 +18,6 @@ class SubstructureEntity extends SyntaxEntity
 
     protected function evaluate()
     {
-        parent::evaluate();
-
-        $this->_command = Conditional::isConditionalValue($this->value) ?
-            new Conditional($this->value) :
-            new Command($this->value);
-        $this->_command->subStructure = $this;
-        if (null !== $this->positionEntity) {
-            $this->_command->positionEntity = new PositionEntity(
-                $this->value,
-                1,
-                $this->positionEntity->originalLength - ($this->getLeftOffset() * 2),
-                1,
-                $this->positionEntity->originalLength - ($this->getLeftOffset() * 2),
-            );
-        }
-
     }
 
     public function getLeftOffset()

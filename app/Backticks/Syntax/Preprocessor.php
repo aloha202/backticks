@@ -15,17 +15,34 @@ class Preprocessor
         protected LineParser $lineParser,
         protected PositionManager $positionManager,
         protected ?StructureParser $structureParser = null,
+        protected ?OperatorExtractor $operatorExtractor = null,
+        protected ?ConditionalParser $conditionalParser = null,
     ) {
         $this->stringExtractor->setLineParser($this->lineParser);
         $this->structureExtractor->setLineParser($this->lineParser);
         $this->structureExtractor->setPositionManager($this->positionManager);
         $this->stringExtractor->setPositionManager($this->positionManager);
+
+        if (null === $this->operatorExtractor) {
+            $this->operatorExtractor = new OperatorExtractor(null, $this->positionManager);
+            $this->structureExtractor->setOperatorExtractor($this->operatorExtractor);
+        }
+
+        if (null === $this->conditionalParser) {
+            $this->conditionalParser = new ConditionalParser(
+                $this->operatorExtractor,
+                null,
+                $this->positionManager,
+                $this->structureParser?->getCommandParser(),
+            );
+        }
     }
 
     public function prepare(string $string): string
     {
         $this->lineParser->parse($string);
         $string = $this->stringExtractor->extractStrings($string);
+        $string = $this->operatorExtractor->extractOperators($string);
         $string = $this->structureExtractor->extractStructures($string);
 
         return $string;
@@ -43,6 +60,8 @@ class Preprocessor
             foreach($structureEntity->_substructures as $substructure) {
                 if ($substructure->_command->isConditional() === false) {
                     $this->structureParser->parseSingleCommand($substructure->_command);
+                } else {
+                    $this->conditionalParser->parse($substructure->_command);
                 }
             }
         }
@@ -147,5 +166,10 @@ class Preprocessor
     public function setStructureParser(StructureParser $structureParser)
     {
         $this->structureParser = $structureParser;
+    }
+
+    public function getOperatorEntities($sort = true): ?array
+    {
+        return $this->operatorExtractor?->getEntities($sort);
     }
 }

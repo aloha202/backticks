@@ -3,6 +3,8 @@
 namespace App\Backticks\Syntax;
 
 use App\Backticks\Syntax\DTO\SubstructureExtractorConfig;
+use App\Backticks\Syntax\Entity\Command;
+use App\Backticks\Syntax\Entity\Conditional;
 use App\Backticks\Syntax\Entity\PositionEntity;
 use App\Backticks\Syntax\Entity\SubstructureEntity;
 use App\Backticks\Syntax\Exceptions\SubstructureParseErrorException;
@@ -18,10 +20,22 @@ class SubstructureExtractor
     public function __construct(
         protected ?SubstructureExtractorConfig $config = null,
         protected ?PositionManager $positionManager = null,
+        protected ?OperatorExtractor $operatorExtractor = null,
+        protected ?ConditionalParser $conditionalParser = null,
     ) {
         if (null === $this->config) {
             $this->config = new SubstructureExtractorConfig();
         }
+
+        if (null === $this->conditionalParser) {
+            $this->conditionalParser = new ConditionalParser($this->operatorExtractor ?? new OperatorExtractor());
+        }
+    }
+
+    public function setOperatorExtractor(OperatorExtractor $operatorExtractor)
+    {
+        $this->operatorExtractor = $operatorExtractor;
+        $this->conditionalParser->setOperatorExtractor($operatorExtractor);
     }
 
     public function setPositionManager(PositionManager $positionManager)
@@ -49,6 +63,7 @@ class SubstructureExtractor
                     $name,
                     $this->_position($string, $match, $name),
                 );
+                $this->prepareEntity($entity);
 
                 $this->_entities[] = $entity;
                 $this->_prepared_entities[] = $entity;
@@ -63,6 +78,23 @@ class SubstructureExtractor
         }
 
         return $string;
+    }
+
+    protected function prepareEntity(SubstructureEntity $entity)
+    {
+        $entity->_command = $this->operatorExtractor?->isConditional($entity->value) ?
+            new Conditional($entity->value) :
+            new Command($entity->value);
+        $entity->_command->subStructure = $entity;
+        if (null !== $entity->positionEntity) {
+            $entity->_command->positionEntity = new PositionEntity(
+                $entity->value,
+                1,
+                $entity->positionEntity->originalLength - ($entity->getLeftOffset() * 2),
+                1,
+                $entity->positionEntity->originalLength - ($entity->getLeftOffset() * 2),
+            );
+        }
     }
 
     public function extractMatches(string $string): ?array

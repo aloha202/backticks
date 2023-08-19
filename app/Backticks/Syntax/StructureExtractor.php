@@ -48,6 +48,11 @@ class StructureExtractor
         }
     }
 
+    public function setOperatorExtractor(OperatorExtractor $operatorExtractor)
+    {
+        $this->substructureExtractor?->setOperatorExtractor($operatorExtractor);
+    }
+
     public function setPositionManager(PositionManager $positionManager)
     {
         $this->positionManager = $positionManager;

@@ -32,6 +32,11 @@ class StructureParser
         }
     }
 
+    public function getCommandParser(): ?CommandParser
+    {
+        return $this->commandParser;
+    }
+
     public function parse(StructureEntity $structureEntity): StructureEntity
     {
         $currentPos = 0;
@@ -43,6 +48,9 @@ class StructureParser
             $pos = strpos($string, $value);
             $realPos = $pos + $currentPos;
             $len = strlen($value);
+            /**
+             * @TODO fix possible bug with command position for identical commands
+             */
             $command = new Command(
                 $value,
                 $this->_position($realPos, $value, $structureEntity->preparedValue),
